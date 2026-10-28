@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>测测你的本命定居城市</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:PingFang SC,Microsoft YaHei,sans-serif;}
+body{background:linear-gradient(135deg,#F5F1EF,#EEF1F3);min-height:100vh;color:#5A5A68;padding:20px 16px;}
+.wrap{max-width:480px;margin:0 auto;}
+.page{display:block;animation:fade 0.4s ease;}
+.hide{display:none !important;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+.title{text-align:center;margin-top:30px;margin-bottom:8px;font-size:24px;color:#3A3A48;font-weight:bold;}
+.sub{text-align:center;color:#5A5A68;opacity:0.8;margin-bottom:24px;}
+.card{background:rgba(255,255,255,0.7);border-radius:20px;padding:22px;box-shadow:0 4px 15px rgba(139,154,168,0.12);margin-bottom:24px;}
+.btn{width:100%;padding:14px;border:none;border-radius:14px;background:#8B9AA8;color:#fff;font-size:16px;cursor:pointer;transition:0.2s;}
+.btn:disabled{background:#b4c0c9;cursor:not-allowed;}
+.btn:hover:not(:disabled){filter:brightness(0.95);transform:translateY(-1px);}
+.progress-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;opacity:0.7;}
+.progress-bar{width:100%;height:6px;background:#D9E0E5;border-radius:999px;margin-bottom:24px;overflow:hidden;}
+.progress-inner{height:100%;background:#8B9AA8;transition:0.3s;width:6.67%;}
+.question{font-size:17px;color:#3A3A48;margin-bottom:20px;}
+.opt{padding:14px;border:1px solid #ddd;border-radius:14px;margin-bottom:12px;cursor:pointer;transition:0.2s;}
+.opt.active{border-color:#8B9AA8;background:#F0F5F9;}
+.tip{text-align:center;font-size:12px;opacity:0.6;margin-top:12px;}
+.res-name{text-align:center;font-size:28px;font-weight:bold;color:#3A3A48;margin:8px 0;}
+.res-tag{text-align:center;font-size:13px;opacity:0.8;margin-bottom:20px;}
+.res-block{margin-bottom:16px;}
+.res-block h4{color:#3A3A48;margin-bottom:6px;font-size:15px;}
+.res-block p{font-size:14.5px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<!-- 封面 -->
+<div id="cover" class="page">
+    <h1 class="title">测测你的本命定居城市</h1>
+    <p class="sub">你最适合在哪长期定居？</p>
+    <div class="card">
+        <p>每个人都有专属的宜居归宿✨<br>有人偏爱四季分明，有人喜欢温暖湿润；有人爱热闹市井，有人偏爱安静小城。<br><br>一共15道选择题，测出最适配你的定居城市！</p>
+    </div>
+    <button id="startBtn" class="btn">开始测试</button>
+    <p class="tip">共15题 · 免费测试</p>
+</div>
+
+<!-- 答题页 -->
+<div id="quiz" class="page hide">
+    <div class="progress-row">
+        <span>答题进度</span>
+        <span id="progressText">1/15</span>
+    </div>
+    <div class="progress-bar">
+        <div id="progressInner" class="progress-inner"></div>
+    </div>
+    <div class="card">
+        <div id="qTitle" class="question"></div>
+        <div id="optBox"></div>
+    </div>
+    <button id="nextBtn" class="btn" disabled>选择选项继续</button>
+</div>
+
+<!-- 结果页 -->
+<div id="result" class="page hide">
+    <p class="sub">你的本命定居城市</p>
+    <div id="cityName" class="res-name"></div>
+    <div id="cityTag" class="res-tag"></div>
+    <div class="card">
+        <div class="res-block">
+            <h4>宜居亮点</h4>
+            <p id="adv"></p>
+        </div>
+        <div class="res-block">
+            <h4>适配人群</h4>
+            <p id="suit"></p>
+        </div>
+        <div class="res-block">
+            <h4>小小缺憾</h4>
+            <p id="short"></p>
+        </div>
+    </div>
+    <button id="restartBtn" class="btn">重新测试</button>
+    <p class="tip">截图保存，发给朋友一起测✨</p>
+</div>
+</div>
+
+<script>
+const qList = [
+    {title:"【气候偏好】你最喜欢哪种常年天气？",opts:[
+        {txt:"四季分明，春夏秋冬各有韵味",score:[1,0,0,0,0]},
+        {txt:"温暖湿润，冬天不冷全年舒适",score:[0,1,0,0,0]},
+        {txt:"干爽晴朗，少雨不潮湿，阳光充足",score:[0,0,1,0,0]},
+        {txt:"凉爽通透，夏季不闷热，体感清新",score:[0,0,0,1,0]}
+    ]},
+    {title:"【生活节奏】你理想的日常通勤节奏是？",opts:[
+        {txt:"短途通勤，步行/骑车10分钟内可达",score:[1,0,0,0,0]},
+        {txt:"适中通勤，半小时内可接受，不赶不慢",score:[0,1,0,0,0]},
+        {txt:"可接受长通勤，愿意为发展牺牲时间",score:[0,0,1,0,0]},
+        {txt:"弹性自由，无需固定通勤时间",score:[0,0,0,1,0]}
+    ]},
+    {title:"【美食偏好】你更偏爱哪种饮食氛围？",opts:[
+        {txt:"面食醇厚、家常菜朴实暖胃",score:[1,0,0,0,0]},
+        {txt:"清淡鲜甜、海鲜丰富、食材新鲜",score:[0,1,0,0,0]},
+        {txt:"重口入味、烟火小吃超多",score:[0,0,1,0,0]},
+        {txt:"多元融合，中外美食应有尽有",score:[0,0,0,1,0]}
+    ]},
+    {title:"【潮湿接受度】你能忍受回南天潮湿吗？",opts:[
+        {txt:"完全不行，讨厌潮湿闷热，偏爱干燥",score:[1,0,0,0,0]},
+        {txt:"可以接受，潮湿天气别有氛围感",score:[0,1,0,0,0]},
+        {txt:"偶尔介意，通风好就没问题",score:[0,0,1,0,0]},
+        {txt:"无所谓，更看重整体环境",score:[0,0,0,1,0]}
+    ]},
+    {title:"【环境氛围】你更喜欢哪种城市氛围？",opts:[
+        {txt:"安静安逸，生活平淡安稳无压力",score:[1,0,0,0,0]},
+        {txt:"温柔宜居，市井烟火足，节奏舒缓",score:[0,1,0,0,0]},
+        {txt:"热闹鲜活，人流密集，充满活力",score:[0,0,1,0,0]},
+        {txt:"高端精致，城市整洁，小众高级",score:[0,0,0,1,0]}
+    ]},
+    {title:"【事业需求】你对工作收入的期待是？",opts:[
+        {txt:"稳定优先，薪资平稳，不求大富大贵",score:[1,0,0,0,0]},
+        {txt:"均衡发展，生活工作兼顾，性价比高",score:[0,1,0,0,0]},
+        {txt:"高薪优先，愿意拼搏追求事业突破",score:[0,0,1,0,0]},
+        {txt:"自由创收，不被固定薪资束缚",score:[0,0,0,1,0]}
+    ]},
+    {title:"【季节喜好】一年中你最期待哪个季节？",opts:[
+        {txt:"秋天，干爽凉爽、氛围感拉满",score:[1,0,0,0,0]},
+        {txt:"春天，温暖湿润、万物复苏温柔治愈",score:[0,1,0,0,0]},
+        {txt:"夏天，热烈鲜活、夜市烟火十足",score:[0,0,1,0,0]},
+        {txt:"冬天，干净清冷、适合慢生活沉淀",score:[0,0,0,1,0]}
+    ]},
+    {title:"【城市包容度】你更看重城市的？",opts:[
+        {txt:"人情味浓，本地人友善，生活踏实",score:[1,0,0,0,0]},
+        {txt:"包容性强，外地人无隔阂、不排外",score:[0,1,0,0,0]},
+        {txt:"机会公平，凭能力立足，竞争透明",score:[0,0,1,0,0]},
+        {txt:"氛围自由，思想开放、多元包容",score:[0,0,0,1,0]}
+    ]},
+    {title:"【居住环境】你理想的居住状态是？",opts:[
+        {txt:"绿植多、空气好，亲近自然山水",score:[1,0,0,0,0]},
+        {txt:"配套齐全，商超医院学校一站式便利",score:[0,1,0,0,0]},
+        {txt:"商圈密集，娱乐休闲场所超多",score:[0,0,1,0,0]},
+        {txt:"低密度居住，安静不嘈杂、私密性强",score:[0,0,0,1,0]}
+    ]},
+    {title:"【社交偏好】日常更喜欢的生活状态？",opts:[
+        {txt:"低社交，独处自在，享受安静生活",score:[1,0,0,0,0]},
+        {txt:"轻度社交，邻里和睦，小圈子温馨",score:[0,1,0,0,0]},
+        {txt:"高频社交，喜欢结识新朋友、热闹聚会",score:[0,0,1,0,0]},
+        {txt:"精致社交，同频圈层，高质量交往",score:[0,0,0,1,0]}
+    ]},
+    {title:"【物价接受度】你对生活物价的诉求？",opts:[
+        {txt:"低物价，性价比高，存钱无压力",score:[1,0,0,0,0]},
+        {txt:"中等物价，收支平衡，生活无负担",score:[0,1,0,0,0]},
+        {txt:"可接受高物价，匹配优质资源即可",score:[0,0,1,0,0]},
+        {txt:"不在乎物价，优先生活品质",score:[0,0,0,1,0]}
+    ]},
+    {title:"【出行需求】你更看重城市哪种交通？",opts:[
+        {txt:"市内畅通，短途出行方便省心",score:[1,0,0,0,0]},
+        {txt:"城际便利，周边城市游玩方便",score:[0,1,0,0,0]},
+        {txt:"枢纽发达，跨省出行高效快捷",score:[0,0,1,0,0]},
+        {txt:"交通精致，不拥堵、体验感好",score:[0,0,0,1,0]}
+    ]},
+    {title:"【文化氛围】你偏爱哪种城市气质？",opts:[
+        {txt:"古韵浓厚，有历史底蕴、慢节奏古雅",score:[1,0,0,0,0]},
+        {txt:"市井温柔，烟火气十足、治愈松弛",score:[0,1,0,0,0]},
+        {txt:"潮流新潮，年轻活力、时尚前卫",score:[0,0,1,0,0]},
+        {txt:"文艺高级，小众精致、氛围感独特",score:[0,0,0,1,0]}
+    ]},
+    {title:"【压力耐受】你能接受的生活压力？",opts:[
+        {txt:"极低压力，安稳佛系，岁月静好",score:[1,0,0,0,0]},
+        {txt:"轻度压力，稳步前进，松弛有度",score:[0,1,0,0,0]},
+        {txt:"中度压力，压力与机遇并存",score:[0,0,1,0,0]},
+        {txt:"可控高压，挑战越大成长越快",score:[0,0,0,1,0]}
+    ]},
+    {title:"【定居诉求】长期定居最核心的追求？",opts:[
+        {txt:"安稳养老，平淡度日，安稳一生",score:[1,0,0,0,0]},
+        {txt:"宜居舒适，生活惬意，幸福感拉满",score:[0,1,0,0,0]},
+        {txt:"成长发展，资源丰富，前途广阔",score:[0,0,1,0,0]},
+        {txt:"品质生活，精致自由，小众独特",score:[0,0,0,1,0]}
+    ]}
+];
+const cityData = [
+    {name:"成都",tag:"温柔佛系·烟火宜居城",adv:"成都绝对是国内宜居天花板！四季气候温和，冬天不严寒夏天不酷热，生活节奏极度松弛，大街小巷都是茶馆、美食和烟火气。城市配套完善，医疗教育资源充足，物价友好，不用内卷也能过得舒服惬意。满城绿植环绕，公园遍地都是，随时随地都能感受慢生活的治愈感。",suit:"适合性格佛系、不喜内卷、偏爱安稳生活，喜欢美食和市井烟火，追求松弛幸福感的人。不喜欢高压快节奏，想要安居乐业、平淡度日的你，在这里会极度适配。",short:"就业高薪岗位较少，高端职场资源不如一线密集；节假日热门景点人流量大，略显拥挤。"},
+    {name:"苏州",tag:"江南古韵·安稳雅致小城",adv:"苏州是江南温柔的代名词，四季分明气候宜人，白墙黛瓦古韵十足，山水园林随处可见。城市干净整洁，治安极佳，生活安逸不浮躁，物价适中，通勤便捷。紧邻繁华都市却独留一份静谧，既有现代城市的便利，又有千年古城的温柔底蕴。",suit:"适合喜欢古风古韵、偏爱安静雅致生活，性格温和内敛，追求岁月静好、不喜喧嚣热闹的人。想要兼顾便利生活与诗意氛围感的你，适配度满分。",short:"高端娱乐业态较少，生活氛围偏沉稳；薪资水平略低于一线城市，高薪岗位稀缺。"},
+    {name:"昆明",tag:"春城四季·恒温治愈小城",adv:"名副其实的春城，全年温差极小，四季如春、花开不断，没有酷暑严寒。空气清新绿植繁茂，气候干爽不潮湿，生活节奏缓慢安逸，物价适中，生活压力极低，是常年宜居的绝佳选择。",suit:"适合极度怕冷怕热、偏爱恒温气候，性格佛系松弛，想要远离极端天气，安稳度日、治愈生活的人。",short:"紫外线较强，日常需要防晒；高端产业较少，就业选择相对有限。"},
+    {name:"杭州",tag:"诗意温柔·均衡宜居之城",adv:"杭州是颜值与实力并存的温柔都市，西湖山水环绕，四季风景各有韵味，城市干净精致、绿化极佳。生活节奏松紧有度，既有发展机会又不极致内卷，商业配套完善，美食丰富，气候温润舒适，宜居指数常年稳居前列。",suit:"适合性格温柔通透、追求生活与工作平衡，喜欢山水诗意、偏爱温润气候，想要兼顾发展与幸福感的人。不喜欢极端内卷，向往精致松弛生活的你适配这里。",short:"房价偏高，生活成本中等偏上；梅雨季潮湿明显，阴雨天气较多。"},
+    {name:"上海",tag:"摩登活力·机遇奋斗之都",adv:"国内顶级一线大都市，资源高度集中，就业机会海量，各行各业发展空间充足。城市包容开放、规则透明，交通四通八达，商业、文化、潮流业态全国顶尖，永远充满活力与新鲜感。",suit:"适合野心向上、敢于拼搏奋斗，追求自我成长、想要把握顶级资源，喜欢热闹鲜活、潮流多元氛围的人。不甘平庸、想要突破自我的你适配这里。",short:"生活成本极高，房价昂贵；生活节奏极快，压力大、通勤时长偏久。"},
+    {name:"南京",tag:"金陵古都·沉稳书香之城",adv:"六朝古都，历史底蕴厚重，城市绿化很好，科教资源很强，人文氛围浓厚。四季分明，美食丰富，城市不浮躁，配套完善，距离长三角各大城市很近。",suit:"适合喜欢历史人文、重视教育，喜欢稳重有底蕴城市，想要兼顾发展和生活烟火气的人。",short:"夏天闷热、冬天湿冷；房价偏高。"},
+    {name:"青岛",tag:"碧海红瓦·海滨清爽小城",adv:"红瓦绿树碧海蓝天，海边城市，夏天凉爽，海鲜多，城市氛围感强，空气清新，节奏舒服，风景出片。",suit:"适合喜欢大海、偏爱海景，爱吃海鲜，喜欢清爽海风，想要海边慢生活的人。",short:"冬天风大偏冷；回南天偶尔潮湿。"},
+    {name:"厦门",tag:"海岛浪漫·清新文艺小城",adv:"滨海文艺小城，一年四季温暖，海风温柔，海岛风景绝美，文艺氛围拉满，城市干净，适合喜欢浪漫松弛感。",suit:"适合热爱海边、喜欢文艺、喜欢慢节奏，偏爱温暖气候的人。",short:"地方不大，就业选择有限；物价偏高。"},
+    {name:"威海",tag:"干净治愈·小众海滨小城",adv:"国内少有的干净小城，海水清澈，人少安静，空气质量顶级，节奏很慢，物价友好，适合养老放松。",suit:"适合喜欢安静、讨厌拥挤，追求干净环境，想要低压力海边生活的人。",short:"产业少，就业机会不多；冬天寒冷漫长。"},
+    {name:"重庆",tag:"山城热辣·烟火热闹之城",adv:"山城独特地貌，火锅小吃遍地，烟火气爆棚，城市热闹鲜活，包容度高，夜景绝美，物价友好。",suit:"适合爱吃重口美食、喜欢热闹市井，性格热情，不怕潮湿爬坡的人。",short:"湿度大，夏天闷热；山路多，通勤容易绕路。"},
+    {name:"广州",tag:"烟火包容·美食天堂",adv:"包容性极强，不排外，早茶美食超多，生活气息浓，气候温暖，商业发达，选择很多。",suit:"适合爱吃美食、喜欢热闹市井，不介意潮湿，喜欢多元包容氛围的人。",short:"夏季漫长闷热，梅雨潮湿；人流量大。"},
+    {name:"宁波",tag:"江南海港·低调富裕之城",adv:"低调富庶的江南海港，城市干净，治安好，经济强，海鲜丰富，节奏适中，人相对没那么拥挤。",suit:"适合踏实稳重、想要安稳发展，喜欢海鲜，偏爱不喧嚣的富庶小城的人。",short:"知名度不算高；冬天湿冷。"},
+    {name:"大连",tag:"北方海滨·清爽浪漫之城",adv:"北方难得的海滨城市，夏天凉快不闷热，海鲜丰盛，城市洋气，四季分明，空气干爽。",suit:"适合喜欢大海、怕南方潮湿，想要北方海滨生活的人。",short:"冬天很冷，风大；冬季漫长。"}
+];
+
+let current = 0;
+let score = [0,0,0,0,0];
+const cover = document.getElementById("cover");
+const quiz = document.getElementById("quiz");
+const result = document.getElementById("result");
+const qTitle = document.getElementById("qTitle");
+const optBox = document.getElementById("optBox");
+const progressText = document.getElementById("progressText");
+const progressInner = document.getElementById("progressInner");
+const cityName = document.getElementById("cityName");
+const cityTag = document.getElementById("cityTag");
+const adv = document.getElementById("adv");
+const suit = document.getElementById("suit");
+const short = document.getElementById("short");
+const startBtn = document.getElementById("startBtn");
+const nextBtn = document.getElementById("nextBtn");
+const restartBtn = document.getElementById("restartBtn");
+
+startBtn.onclick = function(){
+    cover.classList.add("hide");
+    quiz.classList.remove("hide");
+    renderQ();
+}
+restartBtn.onclick = function(){
+    current = 0;
+    score = [0,0,0,0,0];
+    result.classList.add("hide");
+    cover.classList.remove("hide");
+}
+nextBtn.onclick = function(){
+    current++;
+    if(current >= qList.length){
+        showResult();
+    }else{
+        renderQ();
+    }
+}
+function renderQ(){
+    const q = qList[current];
+    qTitle.innerText = q.title;
+    optBox.innerHTML = "";
+    nextBtn.disabled = true;
+    let sel = null;
+    q.opts.forEach(item=>{
+        const div = document.createElement("div");
+        div.className = "opt";
+        div.innerText = item.txt;
+        div.onclick = function(){
+            document.querySelectorAll(".opt").forEach(d=>d.classList.remove("active"));
+            div.classList.add("active");
+            sel = item;
+            nextBtn.disabled = false;
+        }
+        optBox.appendChild(div);
+    })
+    const pct = ((current+1)/qList.length)*100;
+    progressText.innerText = (current+1)+"/"+qList.length;
+    progressInner.style.width = pct+"%";
+    nextBtn.onclick = ()=>{
+        if(!sel) return;
+        for(let i=0;i<5;i++) score[i] += sel.score[i];
+        current++;
+        if(current >= qList.length){
+            showResult();
+        }else{
+            renderQ();
+        }
+    }
+}
+function showResult(){
+    quiz.classList.add("hide");
+    result.classList.remove("hide");
+    let maxI=0,maxV=score[0];
+    for(let i=1;i<score.length;i++){
+        if(score[i]>maxV){maxV=score[i];maxI=i;}
+    }
+    const r = cityData[maxI % cityData.length];
+    cityName.innerText = r.name;
+    cityTag.innerText = r.tag;
+    adv.innerText = r.adv;
+    suit.innerText = r.suit;
+    short.innerText = r.short;
+}
+</script>
+</body>
+</html>
